@@ -1,18 +1,52 @@
 package br.go.igor.tasks.apitest;
 
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import org.hamcrest.CoreMatchers;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class APITest {
 
+    @BeforeClass
+    public static void setup(){
+        RestAssured.baseURI= "http://localhost:8002/tasks-backend";
+    }
+
     @Test
-    public void test(){
+    public void deveRetornarTarefas(){
         RestAssured.given()
-                .log().all()
                 .when()
-                .get("http://localhost:8002/tasks-backend/todo")
+                .get("/todo")
                 .then()
-                .log().all()
-                ;
+                .statusCode(200)
+                 ;
+    }
+
+    @Test
+    public void deveAdicionarUmaTarefaComSucesso(){
+        RestAssured.given()
+                .body("{\"task\": \"Teste via API\",\"dueDate\": \"2020-12-30\"}")
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/todo")
+                .then()
+                .statusCode(201)
+               ;
+    }
+    @Test
+    public void naoDeveAdicionarTarefaInvalida(){
+        RestAssured.given()
+                .body("{\"task\": \"Teste via API\",\"dueDate\": \"2010-12-30\"}")
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/todo")
+                .then()
+                .statusCode(400)
+                .body("message", CoreMatchers.is("Due date must not be in past"))
+        ;
     }
 }
+
+
+
